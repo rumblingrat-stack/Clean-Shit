@@ -69,7 +69,7 @@ nav .nb{position:absolute;top:2px;right:calc(50% - 25px);width:11px;height:11px;
 <script>
 const $=s=>document.querySelector(s),K='calcetto_v1';
 const S={players:[],matches:[]};
-const hk=[];let hi=0,seen=null,seenInit=false;try{seen=JSON.parse(localStorage.getItem('calcetto_seen'))}catch(e){}seenInit=!!seen;
+const hk=[];let hi=0,armed=0,guarded=false,seen=null,seenInit=false;try{seen=JSON.parse(localStorage.getItem('calcetto_seen'))}catch(e){}seenInit=!!seen;
 const stamps=()=>({partite:Math.max(0,...S.matches.flatMap(m=>[m.ts||0,m.pts||0])),pagelle:Math.max(0,...S.matches.filter(m=>m.status=='played').map(m=>m.pts||0)),impostazioni:Math.max(0,...S.players.map(p=>p.ts||0))});
 function newIds(t){const x=seen[t];return t=='partite'?S.matches.filter(m=>(m.ts||0)>x||(m.pts||0)>x).map(m=>m.id):t=='pagelle'?S.matches.filter(m=>m.status=='played'&&(m.pts||0)>x).map(m=>m.id):S.players.filter(p=>(p.ts||0)>x).map(p=>p.id)}
 function markSeen(){const s=stamps();let ch=false;
@@ -84,7 +84,9 @@ document.querySelectorAll(q).forEach(el=>{const id=t=='impostazioni'?el.dataset.
 const snap=()=>({tab:ui.tab,sub:ui.sub,detail:ui.detail,vote:ui.vote,voter:ui.voter,modal:ui.modal});
 const nkey=()=>JSON.stringify(snap());
 function navSync(){const k=nkey();if(k==hk[hi])return;if(hi>0&&k==hk[hi-1]){history.back();return}hi++;hk.length=hi;hk[hi]=k;history.pushState({i:hi,s:snap()},'')}
-window.addEventListener('popstate',e=>{const st=e.state;if(!st||!st.s)return;hi=st.i;Object.assign(ui,st.s);hk[hi]=nkey();render()});
+window.addEventListener('popstate',e=>{const st=e.state;
+if(st&&st.guard){if(armed){armed=0;history.back();return}armed=1;setTimeout(()=>{armed=0},2000);toast('Premi ancora indietro per uscire');history.pushState({i:0,s:snap()},'');hi=0;hk.length=1;hk[0]=nkey();return}
+if(!st||!st.s)return;hi=st.i;Object.assign(ui,st.s);hk[hi]=nkey();render()});
 const save=()=>{};
 const uid=()=>Math.random().toString(36).slice(2,9);
 const MODS={5:["2-2","1-2-1","3-1"],6:["2-2-1","3-1-1","2-1-2"],7:["2-3-1","3-2-1","2-2-2","3-1-2"],8:["3-3-1","3-2-2","2-3-2"],10:["4-3-2","3-4-2","4-4-1","3-3-3"]};
@@ -238,5 +240,7 @@ firebase.initializeApp(FIREBASE_CONFIG);DB=firebase.firestore();
 setTimeout(()=>{if(!ready){LMSG='Non riesco a raggiungere i dati. Controlla la connessione, i dati di configurazione Firebase e che il database Firestore sia stato creato. [versione 3 · progetto: '+FIREBASE_CONFIG.projectId+']';render()}},10000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 ui.enter=true;hk[0]=nkey();try{history.replaceState({i:0,s:snap()},'')}catch(e){}
+function armGuard(){if(guarded)return;guarded=true;try{history.replaceState({guard:1},'');history.pushState({i:0,s:snap()},'');hi=0;hk.length=1;hk[0]=nkey()}catch(e){}}
+['pointerup','keydown'].forEach(n=>document.addEventListener(n,armGuard,{once:true,capture:true}));
 render();
 </script></body></html>
