@@ -1,4 +1,5 @@
 <!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Calcetto</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a43"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Calcetto">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -208,5 +209,6 @@ firebase.initializeApp(FIREBASE_CONFIG);DB=firebase.firestore();
 ['players','matches','goals','ratings'].forEach(c=>DB.collection(c).onSnapshot(s=>{rows[c]=s.docs.map(d=>({id:d.id,...d.data()}));got[c]=1;rebuild();if(got.players&&got.matches&&got.goals&&got.ratings){ready=true;rr()}},e=>{console.error(e);LMSG='Errore Firebase ('+(e&&e.code||'sconosciuto')+'). Controlla le regole di Firestore e la configurazione.';render()}))
 }catch(e){LMSG='Errore di connessione. Controlla la configurazione.';render()}})();
 setTimeout(()=>{if(!ready){LMSG='Non riesco a raggiungere i dati. Controlla la connessione, i dati di configurazione Firebase e che il database Firestore sia stato creato. [versione 3 · progetto: '+FIREBASE_CONFIG.projectId+']';render()}},10000);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 render();
 </script></body></html>
